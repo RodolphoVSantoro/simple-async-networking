@@ -1,6 +1,7 @@
-import express from 'express'
-const app = express()
-const port = 3000
+import express from 'express';
+
+const app = express();
+const port = 3000;
 
 app.post('/', (req, res) => {
     const request = {
@@ -12,9 +13,9 @@ app.post('/', (req, res) => {
         protocol: req.protocol,
     };
     console.log(`got\n${request}\nsize=${JSON.stringify(request).length}`);
-    res.send('Hello World!')
-})
+    res.send('Hello World!');
+});
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+    console.log(`Example app listening on port ${port}`);
+});
