@@ -57,13 +57,13 @@ int getTransactionFromPOSTRequest(char* buffer, int bufferSize, Transaction* tra
     return 0;
 }
 
-// Serialize post transaction response
+// Serialize POST transaction response
 void setPostResponse(User* user, char* responseBuffer) {
     const char* postResponseTemplate = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"limite\":%d, \"saldo\":%d}";
     sprintf(responseBuffer, postResponseTemplate, user->limit, user->total);
 }
 
-// Serialize get extract response
+// Serialize GET extract response
 void setGetResponse(User* user, char* responseBuffer) {
     char body[RESPONSE_BODY_SIZE] = "";
     char transactionData[16 * 1024];
