@@ -1,5 +1,4 @@
-import express from 'express';
-
+const express = require('express');
 const app = express();
 const port = 3000;
 
@@ -13,7 +12,7 @@ app.post('/', (req, res) => {
         protocol: req.protocol,
     };
     console.log(`got\n${request}\nsize=${JSON.stringify(request).length}`);
-    res.send('Hello World!');
+    res.send();
 });
 
 app.listen(port, () => {

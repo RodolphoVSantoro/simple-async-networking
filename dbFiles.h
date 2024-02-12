@@ -1,3 +1,6 @@
+#ifndef DBFILES_H
+#define DBFILES_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,19 +27,21 @@ typedef struct USER {
     Transaction transactions[MAX_TRANSACTIONS];
 } User;
 
+const char* userFileTemplate = "data/user%d.bin";
+
 void readUser(User* user, int id) {
-    const char* template = "data/user%d.bin";
     char fname[FILE_NAME_SIZE];
-    sprintf(fname, template, id);
+    sprintf(fname, userFileTemplate, id);
     FILE* fpTotals = fopen(fname, "rb");
     fread(user, sizeof(User), 1, fpTotals);
     fclose(fpTotals);
 }
 
+// Instead of doing subsequent readUser and writeUser, use the updateUser function to update the user
+// Only use if it's a new user, or you want to reset the user
 void writeUser(User* user) {
-    const char* template = "data/user%d.bin";
     char fname[FILE_NAME_SIZE];
-    sprintf(fname, template, user->id);
+    sprintf(fname, userFileTemplate, user->id);
     FILE* fpTotals = fopen(fname, "wb");
     fwrite(user, sizeof(User), 1, fpTotals);
     fclose(fpTotals);
@@ -86,7 +91,7 @@ int addTransaction(User* user, Transaction* transaction) {
     return 0;
 }
 
-void getOrderedTransactions(User* user, Transaction* transaction, Transaction* orderedTransactions) {
+void getOrderedTransactions(User* user, Transaction* orderedTransactions) {
     int i = user->oldestTransaction;
     for (int j = 0; j < user->nTransactions; j++) {
         orderedTransactions[j] = user->transactions[i];
@@ -94,11 +99,11 @@ void getOrderedTransactions(User* user, Transaction* transaction, Transaction* o
     }
 }
 
-void getCurrentTime(Transaction* transaction) {
+void getCurrentTime(char* timeStr) {
     time_t mytime = time(NULL);
     char* time_str = ctime(&mytime);
     time_str[strlen(time_str) - 1] = '\0';
-    strcpy(transaction->realizada_em, time_str);
+    strcpy(timeStr, time_str);
 }
 
 Transaction createTransaction(int valor, char tipo, char* descricao) {
@@ -106,13 +111,16 @@ Transaction createTransaction(int valor, char tipo, char* descricao) {
     transaction.valor = valor;
     transaction.tipo = tipo;
     strcpy(transaction.descricao, descricao);
-    getCurrentTime(&transaction);
+    getCurrentTime(transaction.realizada_em);
 
     return transaction;
 }
 
-// writes to the user variable
-int updateUser(int id, Transaction* transaction, User* user) {
+// updates the user with the transaction
+// writes the updated user to the user variable
+// returns 0 if transaction was successful
+// returns -1 if the user has no limit
+int updateUserWithTransaction(int id, Transaction* transaction, User* user) {
     const char* userTemplate = "data/user%d.bin";
     char fname[FILE_NAME_SIZE];
     sprintf(fname, userTemplate, id);
@@ -124,36 +132,38 @@ int updateUser(int id, Transaction* transaction, User* user) {
     }
     fread(user, sizeof(User), 1, fpTotals);
 
-    int result = addTransaction(&user, transaction);
+    int transactionResult = addTransaction(user, transaction);
 
-    printf("Result: %d\n", result);
-    if (result == 0) {
+    if (transactionResult == 0) {
         fseek(fpTotals, 0, SEEK_SET);
         fwrite(user, sizeof(User), 1, fpTotals);
     }
     fclose(fpTotals);
-    return result;
+    return transactionResult;
 }
 
-int main() {
-    initDb();
-    User user;
-    readUser(&user, 3);
-    printf("User 3 started with %d cents\n", user.total);
+// int main() {
+//     initDb();
+//     User user;
+//     readUser(&user, 3);
+//     printf("User 3 has %d\n", user.total);
 
-    Transaction t1 = createTransaction(10000, 'c', "credito teste");
-    int result = addTransaction(&user, &t1);
-    if (result != 0) {
-        printf("Transaction failed\n");
-    }
+//     Transaction t1 = createTransaction(10000, 'c', "credito teste");
+//     int result = addTransaction(&user, &t1);
+//     if (result != 0) {
+//         printf("Transaction failed\n");
+//     }
 
-    writeUser(&user);
+//     Transaction t2 = createTransaction(1500, 'd', "Deposito teste");
+//     result = addTransaction(&user, &t2);
+//     if (result != 0) {
+//         printf("Transaction failed\n");
+//     }
 
-    Transaction t2 = createTransaction(1500, 'd', "Deposito teste");
-    result = updateUser(3, &t2, &user);
+//     writeUser(&user);
+//     readUser(&user, 3);
+//     printf("User 3 has %d\n", user.total);
 
-    readUser(&user, 3);
-
-    printf("User 3 ended with %d cents\n", user.total);
-    return 0;
-}
+//     return 0;
+// }
+#endif
